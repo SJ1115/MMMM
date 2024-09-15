@@ -67,8 +67,8 @@ from transformers import (
 
 from tokenizers import AddedToken
 
-from src.task.sofc import SOFCDataset, SOFCDataset_a
-from src.task.matscholar import MatScholarDataset, MatScholarDataset_a
+from src.task.sofc import SOFCDataset
+from src.task.matscholar import MatScholarDataset
 from src.task.metrics import NER_metrics
 
 from src.util import callpath, makedir
@@ -95,15 +95,14 @@ data_name = args.data.lower()
 assert data_name in ('sofc', 'sofc_slot', 'matscholar'), "Insert the proper database name."
 
 if data_name == 'sofc':
-    dataset = SOFCDataset_a(tokenizer, 'train', fold=args.fold, is_slot=False, augment_dir=args.data_src)
-    evalset = SOFCDataset_a(tokenizer, 'valid', fold=args.fold, is_slot=False, augment_dir=args.data_src)
+    dataset = SOFCDataset(tokenizer, 'train', fold=args.fold, is_slot=False, augment_dir=args.data_src)
+    evalset = SOFCDataset(tokenizer, 'valid', fold=args.fold, is_slot=False, augment_dir=args.data_src)
 elif data_name == 'sofc_slot':
-    dataset = SOFCDataset_a(tokenizer, 'train', fold=args.fold, is_slot=True, augment_dir=args.data_src)
-    evalset = SOFCDataset_a(tokenizer, 'valid', fold=args.fold, is_slot=True, augment_dir=args.data_src)
+    dataset = SOFCDataset(tokenizer, 'train', fold=args.fold, is_slot=True, augment_dir=args.data_src)
+    evalset = SOFCDataset(tokenizer, 'valid', fold=args.fold, is_slot=True, augment_dir=args.data_src)
 elif data_name == 'matscholar':
-    #tokenizer.add_tokens([AddedToken('<nUm>', special=True)])
-    dataset = MatScholarDataset_a(tokenizer, 'train', augment_dir=args.data_src)
-    evalset = MatScholarDataset_a(tokenizer, 'valid', augment_dir=args.data_src)
+    dataset = MatScholarDataset(tokenizer, 'train', augment_dir=args.data_src)
+    evalset = MatScholarDataset(tokenizer, 'valid', augment_dir=args.data_src)
     
 else:
     NotImplementedError
