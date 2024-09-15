@@ -34,7 +34,7 @@ def resample_from_geometric(l:int):
     l =  np.random.geometric(1/l)
     return l#max(l, 1)
 
-class DataCollatorForMELM:
+class DataCollatorForMMMM:
     def __init__(self, 
             tokenizer,
             id2label,
@@ -182,12 +182,12 @@ from torch.utils.data import DataLoader
 import json
 from tqdm import tqdm
 
-class DataGeneratorForMELM:
+class DataGeneratorForMMMM:
     def __init__(self, model, tokenizer, dataset, mask_prop:float=0.5, max_length:int=512, resample_length:str=None, random_seed:int=None):
         if random_seed:
             seed(random_seed)
 
-        collator = DataCollatorForMELM(tokenizer, dataset.id2label, mask_prop=mask_prop, max_length=max_length, mask_with_gaussian=True, resample_length=resample_length, keep_original_labels=True)
+        collator = DataCollatorForMMMM(tokenizer, dataset.id2label, mask_prop=mask_prop, max_length=max_length, mask_with_gaussian=True, resample_length=resample_length, keep_original_labels=True)
         self.loader = DataLoader(dataset, batch_size=1, collate_fn=collator)
         # batch=1 due to the tensor shape incompatibility error.
         self.model = model
@@ -268,7 +268,7 @@ class DataGeneratorForMELM:
             
 
 #################
-def filter_MELM_augmentation(model, tokenizer, augmented, id2label, out_dir=None):
+def filter_MMMM_augmentation(model, tokenizer, augmented, id2label, out_dir=None):
         
     collator = DataCollatorForTokenClassification(tokenizer)
     
@@ -316,7 +316,7 @@ def filter_MELM_augmentation(model, tokenizer, augmented, id2label, out_dir=None
 def write_as_CONLL(data, out_file, tokenizer, id2label, merge_file:str=None):
     """
     write a CONLL format txt file with augmented data.
-    + data      : list of dictionary, return of funct 'filter_MELM_augmentation'.)
+    + data      : list of dictionary, return of funct 'filter_MMMM_augmentation'.)
     + out_file  : str, result filename.
     + tokenizer : BertTokenizer.
     + id2label  : dict, 'id2label' from original dataset.
