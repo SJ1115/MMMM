@@ -23,7 +23,7 @@ parser.add_argument('--device', default="", type=str)
 parser.add_argument('--seed', default=0, type=int, help="random seed in train. default=0")
 parser.add_argument('-fp16', action="store_true", help="Whether to use FP16")
 
-# Args for MELM Train
+# Args for MMMM Train
 parser.add_argument('--mlm_batch', default=8, type=int, help="Computational batch size.")
 parser.add_argument('--mlm_batch_full', default=32, type=int, help="Computational batch size.")
 parser.add_argument('--mlm_lr', default=1e-5, type=float, help="learing rate in train. default=1e-5")
@@ -31,7 +31,7 @@ parser.add_argument('--mlm_epochs', default=20, type=int, help="epoch size in tr
 parser.add_argument('--mlm_p', default=0.5, type=float, help="Entity masking prop in MLM training step")
 parser.add_argument('--KG_p', default=0.5, type=float, help="Entity masking prop in MLM training step")
 
-# Args for MELM Generation
+# Args for MMMM Generation
 parser.add_argument('--rounds', default=3, type=int, help="Number of iterations for data augmentation. default=3")
 parser.add_argument('--merge_file', default=None, type=str, 
     help="If set, augmented output will be concatenated to the contents of this file. Recommand to use the source train file.")
@@ -72,10 +72,10 @@ from src.task.matscholar import MatScholarDataset, MatScholarDataset_a
 from src.task.metrics import NER_metrics
 
 from src.util import callpath, makedir
-from MMMM.src.augment import (
-    DataCollatorForMELM,
-    DataGeneratorForMELM,
-    filter_MELM_augmentation,
+from src.augment import (
+    DataCollatorForMMMM,
+    DataGeneratorForMMMM,
+    filter_MMMM_augmentation,
     write_as_CONLL,
 )
 from src.crfmodel import BERT_CRF
@@ -85,7 +85,7 @@ if args.seed:
     np.random.seed(args.seed)
 
 ############################
-### Augmentation by MELM ###
+### Augmentation by MMMM ###
 ############################
 
 model_name = args.model
@@ -113,9 +113,9 @@ logging.basicConfig(filename=callpath(args.result_dir)+"/log.log", level=logging
 logging.info(f"[{model_name}] tokenizer/model is used.")
 
 ### Mask generator with [Entity] token
-melm_collator = DataCollatorForMELM(tokenizer, dataset.id2label, mask_prop=args.mlm_p, mask_KG_prop=args.KG_p)#random_seed=args.seed
+MMMM_collator = DataCollatorForMMMM(tokenizer, dataset.id2label, mask_prop=args.mlm_p, mask_KG_prop=args.KG_p)#random_seed=args.seed
 
-### Model for MELM. Special tokens(entity label) is added.
+### Model for MMMM. Special tokens(entity label) is added.
 model = AutoModelForMaskedLM.from_pretrained(model_name)
 model.resize_token_embeddings(len(tokenizer))
 
@@ -146,20 +146,20 @@ trainer = Trainer(
     args=mlm_args,                      # training arguments, defined above
     train_dataset=dataset,              # training dataset
     eval_dataset=evalset,
-    data_collator=melm_collator,
+    data_collator=MMMM_collator,
 )
 
 trainer.train()
 
 
-generator = DataGeneratorForMELM(model, tokenizer, dataset, mask_prop=args.gen_p, resample_length=args.resample_length, )#random_seed=args.seed
+generator = DataGeneratorForMMMM(model, tokenizer, dataset, mask_prop=args.gen_p, resample_length=args.resample_length, )#random_seed=args.seed
 
 save_name = callpath(args.result_dir + "/generated.json") if args.save_intermediate else None
 
 augmented = generator.generate(rounds=args.rounds, result_dir=save_name)
 logging.info(f"{len(augmented)} cases are generated.")
 
-del model, trainer, melm_collator
+del model, trainer, MMMM_collator
 #################################
 ###  Post-Process : Filtering ###
 #################################
@@ -214,7 +214,7 @@ except:
 
 save_name = callpath(args.result_dir + "/filtered.json") if args.save_intermediate else None
 
-filtered = filter_MELM_augmentation(model, tokenizer, augmented, dataset.id2label, out_dir=save_name)
+filtered = filter_MMMM_augmentation(model, tokenizer, augmented, dataset.id2label, out_dir=save_name)
 
 logging.info(f"After filter, {len(filtered)} cases are left.")
 
