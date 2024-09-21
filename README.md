@@ -18,8 +18,13 @@ with              O      0
 
 ### Usage of MMMM
 
+'generate_MMMM.py' runs MMMM with 4 stages.
+1.  Finetune BERT-style model(default:MatSciBERT) to generation model. 
+2.  Replace entities by MLM inference.
+3.  Finetune BERT-style model(same as 1.) to NER model.
+4.  Filter generated sentences.
 ```
-
+python generate_MMMM.py --device 0 --result_dir result_dir --merge_file ./data/sofc_process/slot_train.txt -save_intermediate
 ```
 
 ### Baselines
